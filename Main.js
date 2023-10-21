@@ -3,6 +3,7 @@ import { Keyboard, TouchableWithoutFeedback, TouchableOpacity, StyleSheet, TextI
 import { View, Text } from 'react-native-ui-lib';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from "react-native-linear-gradient";
+import { Heatmap } from "react-native-maps";
 
 const Main = () => {
   const [kcal, setKcal] = useState('');
@@ -39,6 +40,7 @@ const Main = () => {
 
   return (
     <TouchableWithoutFeedback onPress={exitKeyboard}>
+      {/* <Heatmap radius={30} opacity={0.7}/> */}
       <View style={styles.container}>
       {/* <ImageBackground source={require('./Black-Rock-Formation-On-Sea-Water.jpg')} style={styles.imgBackground}>
         <LinearGradient
@@ -80,14 +82,9 @@ const Main = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#3DC5FF',
     alignItems: 'center',
     justifyContent: 'center',
-    linearGradient: {
-      colors: ['#FF3F77', '#232342'], // Define your gradient colors here
-      start: { x: 0, y: 0 },
-      end: { x: 1, y: 0 }
-    }
   },
   regular: {
     color: 'white',
@@ -121,7 +118,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: '#EFA18A',
+    backgroundColor: '#70d4ff',
     justifyContent: 'center',
     alignItems: 'center',
   },
