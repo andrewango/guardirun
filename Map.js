@@ -38,8 +38,11 @@ const Map = () => {
         <Marker
           key={index}
           coordinate={marker}
-          title={`Running Waypoint`} />
-      ))}
+          title={`Running Waypoint`}>
+      ))
+      }
+          <Image 
+      </Marker>
       {markers.length >= 2 && markers.map((marker, index) => (
         <MapViewDirections
           key={index}
