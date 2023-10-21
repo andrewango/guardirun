@@ -66,7 +66,7 @@ const Main = () => {
         {/* <TouchableOpacity onPress={handlePress} style={styles.button}> */}
           <TouchableWithoutFeedback onPress={animatePress}>
           <Animated.View style={[styles.button, { transform: [{scale: scaleValue}]}]}>
-          <Text style={styles.buttonText}>Start Run</Text>
+          <Text style={styles.buttonText}>Run</Text>
           </Animated.View>
           </TouchableWithoutFeedback>
         {/* </TouchableOpacity> */}

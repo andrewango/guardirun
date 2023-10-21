@@ -1,9 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import Map from './Map';
 const Path = () => {
   return (
-      <Map></Map>
+      <><View>
+      <Text>Hello</Text>
+    </View>
+    <SafeAreaView style={{flex: 1}}>
+    <Map></Map>
+    </SafeAreaView>
+    </>
   );
 };
 
