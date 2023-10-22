@@ -4,7 +4,6 @@ import Map from './Map';
 const Path = () => {
   return (
       <><View>
-      <Text>Hello</Text>
     </View>
     <SafeAreaView style={{flex: 1}}>
     <Map></Map>
