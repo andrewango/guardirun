@@ -12,13 +12,15 @@ const Map = () => {
   const [distanceSum, setDistanceSum] = useState(0);
   const [heatmapData, setHeatmapData] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+
 
   const navigation = useNavigation();
 
   const handleMarkerSet = (e) => {
     if (markers.length <= 10) {
       setMarkers([...markers, e.nativeEvent.coordinate]);
-      // Increment distanceSum by 200 kCal every time a marker is added.
+      // Increment distanceSum by 200 kCal every time a marker is added
       setDistanceSum(distanceSum + 200);
     }
   };
@@ -30,7 +32,6 @@ const Map = () => {
   const fetchHeatmapPredictions = useCallback(async () => {
     const heatmaps = [];
 
-    // Loop to generate coordinates in your region (Boston)
     for (let lat = 42.332590; lat < 42.422590; lat += 0.01) {
       for (let lng = -71.196260; lng < -71.056260; lng += 0.01) {
         try {
@@ -41,10 +42,8 @@ const Map = () => {
             lng: lng,
           });
 
-          // Capture the prediction from the response
           const prediction = postResponse.data[0]['regression'];
           console.log(lat,`, `,lng,`: `,prediction);
-          // Push the data to heatmapData
           heatmaps.push({ latitude: lat, longitude: lng, weight: prediction });
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -52,15 +51,15 @@ const Map = () => {
       }
     }
     setHeatmapData(heatmaps);
+    setLoading(false);
   }, []);
 
-  // Call the fetchHeatmapPredictions function in your useEffect
   useEffect(() => {
     fetchHeatmapPredictions();
   }, [fetchHeatmapPredictions]);
 
   return (
-    <>
+  <>
       <MapView
         style={{ flex: 1 }}
         provider="google"
@@ -112,6 +111,11 @@ const Map = () => {
       <View style={styles.distanceSumContainer}>
         <Text style={styles.distanceSumText}>{`${distanceSum} kCal`}</Text>
       </View>
+
+      {loading ? (
+      <View style={styles.loadingContainer}>
+        <Text>Retrieving Heatmap...</Text>
+      </View> ) : null}
 
       <View style={styles.infoButtonContainer}>
         <TouchableHighlight
@@ -206,6 +210,16 @@ const styles = StyleSheet.create({
   closeInfoModalButton: {
     alignItems: 'center',
     marginTop: 10,
+  },
+    loadingContainer: {
+    position: 'absolute',
+    top: 400,
+    left: 130,
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 10,
+    elevation: 3,
+    fontWeight: 'bold'
   },
 });
 
