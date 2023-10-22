@@ -1,31 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import { View, Button, StyleSheet, Image } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Button, StyleSheet, Modal, Text, TouchableHighlight, TouchableOpacity } from 'react-native';
+import MapView, { Marker, Heatmap } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
 import { GOOGLE_MAPS_API_KEY } from './ApiKeys';
 
 const Map = () => {
   const [markers, setMarkers] = useState([{ latitude: 42.362590, longitude: -71.126260 }]);
-  const [distance, setDistanceSum] = useState(0);
+  const [distanceSum, setDistanceSum] = useState(0);
+  const [heatmapData, setHeatmapData] = useState([]);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+
   const navigation = useNavigation();
 
-  
   const handleMarkerSet = (e) => {
     if (markers.length <= 10) {
       setMarkers([...markers, e.nativeEvent.coordinate]);
+      // Increment distanceSum by 200 kCal every time a marker is added.
+      setDistanceSum(distanceSum + 200);
     }
   };
-  
-    useEffect(() => {
-      let sum = 0;
-      for (let i = 0; i < markers.length-1; i++) {
-        sum += 
-        sum += distance;
+
+  const toggleInfoModal = () => {
+    setShowInfoModal(!showInfoModal);
+  };
+
+  const fetchHeatmapPredictions = useCallback(async () => {
+    const heatmaps = [];
+
+    // Loop to generate coordinates in your region (Boston)
+    for (let lat = 42.332590; lat < 42.422590; lat += 0.01) {
+      for (let lng = -71.196260; lng < -71.056260; lng += 0.01) {
+        try {
+          // Make a POST request for prediction
+          const postResponse = await axios.post('https://backend-image-fthvgxmzsa-uc.a.run.app/predict_crime', {
+            date: "2023-10-21T22:10:06.541Z",
+            lat: lat,
+            lng: lng,
+          });
+
+          // Capture the prediction from the response
+          const prediction = postResponse.data[0]['regression'];
+          console.log(lat,`, `,lng,`: `,prediction);
+          // Push the data to heatmapData
+          heatmaps.push({ latitude: lat, longitude: lng, weight: prediction });
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
       }
-      setDistanceSum(sum);
-    }, [markers]);
+    }
+    setHeatmapData(heatmaps);
+  }, []);
+
+  // Call the fetchHeatmapPredictions function in your useEffect
+  useEffect(() => {
+    fetchHeatmapPredictions();
+  }, [fetchHeatmapPredictions]);
 
   return (
     <>
@@ -35,8 +67,8 @@ const Map = () => {
         showsUserLocation
         followsUserLocation
         showsBuildings
-        zoomEnabled={false}
-        minZoomLevel={10}
+        zoomEnabled={true}
+        minZoomLevel={0}
         initialRegion={{
           latitude: 42.362590,
           longitude: -71.126260,
@@ -45,23 +77,19 @@ const Map = () => {
         }}
         userInterfaceStyle='dark'
         showsMyLocationButton
-        showsTraffic
         loadingEnabled
         onPress={handleMarkerSet}
-        onReady={() => {
-          console.log('Hi')}}
       >
-        {markers.map((marker, index) => (
+        {markers && markers.map((marker, index) => (
           <Marker
-            pinColor={'blue'}
+            pinColor={'#FF0000'}
             key={index}
             coordinate={marker}
             title={`Running Waypoint`}
-          >
-          </Marker>
+          />
         ))}
 
-        {markers.length >= 2 && markers.map((marker, index) => (
+        {markers && markers.length >= 2 && markers.map((marker, index) => (
           <MapViewDirections
             key={index}
             origin={markers[0]}
@@ -69,31 +97,116 @@ const Map = () => {
             waypoints={markers.slice(1, markers.length - 1)}
             apikey={GOOGLE_MAPS_API_KEY}
             strokeWidth={6}
-            strokeColor="blue"
+            strokeColor="#FF0000"
           />
         ))}
+        {heatmapData.length >= 2 && (
+          <Heatmap
+            points={heatmapData}
+            opacity={0.5}
+            radius={900}
+          />
+        )}
       </MapView>
-      <Button style={styles.button} title={distance ? toString(distance) : '0'} onPress={(e) => { navigation.navigate('Main'); }}></Button>
+
+      <View style={styles.distanceSumContainer}>
+        <Text style={styles.distanceSumText}>{`${distanceSum} kCal`}</Text>
+      </View>
+
+      <View style={styles.infoButtonContainer}>
+        <TouchableHighlight
+          style={styles.infoButton}
+          onPress={toggleInfoModal}
+          underlayColor="#DDDDDD"
+        >
+          <Text>Learn more</Text>
+        </TouchableHighlight>
+      </View>
+
+      <Button
+        style={styles.endRunButton}
+        title="End Run"
+        onPress={() => {
+          navigation.navigate('Main');
+        }}
+      />
+
+      <Modal
+        visible={showInfoModal}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.infoModalContainer}>
+          <View style={styles.infoModal}>
+            <Text style={styles.infoText}>Select your own path using 10 waypoints with our crime and traffic heatmap, or 
+                                          follow the suggested path.</Text>
+            <TouchableHighlight
+              style={styles.closeInfoModalButton}
+              onPress={toggleInfoModal}
+              underlayColor="#DDDDDD"
+            >
+              <Text>Close</Text>
+            </TouchableHighlight>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    width: 50,
-    height: 50,
-    borderRadius: 100,
-    color: '#4DCCF7',
+  distanceSumContainer: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 10,
+    elevation: 3,
+  },
+  distanceSumText: {
+    fontWeight: 'bold',
+  },
+  infoButtonContainer: {
+    position: 'absolute',
+    top: 100,
+    right: 20,
+  },
+  infoButton: {
+    padding: 10,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    fontSize: 5
+  },
+  endRunButton: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    fontWeight: '700',
+    fontSize: 40
+  },
+  infoModalContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    fontWeight: 'bold'
-},
-container: {
-  flex: 0.1,
-  backgroundColor: '#4DCCF7',
-  alignItems: 'center',
-  justifyContent: 'center',
-}}
-)
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  infoModal: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+  },
+  infoText: {
+    fontSize: 16,
+    marginBottom: 10,
+    fontWeight: 'bold',
+    textAlign: 'center'
+  },
+  closeInfoModalButton: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+});
 
 export default Map;
