@@ -49,7 +49,7 @@ const Main = () => {
       <ImageBackground source={require('./runner.png')} style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.header}>GuardiRun</Text>
-          <Text style={styles.headerDesc}>Protecting your jog, every step of the way.</Text>
+          <Text style={styles.headerDesc}>Jogging with you, every step of the way.</Text>
           <Text style={styles.regular}>How many calories would you like to burn?</Text>
           <TextInput
             style={styles.input}
